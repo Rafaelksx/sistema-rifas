@@ -61,18 +61,18 @@ exports.getRaffles = async (req, res) => {
   }
 };
 
-exports.getRaffleStats = async (req, res) => {
+// @desc    Obtener una rifa por ID
+// @route   GET /api/raffles/:id
+exports.getRaffleById = async (req, res) => {
   try {
-    const stats = await Ticket.aggregate([
-      { $match: { raffle: new mongoose.Types.ObjectId(req.params.id) } },
-      { $group: {
-          _id: "$status",
-          count: { $sum: 1 }
-      }}
-    ]);
-    res.json(stats);
+    const raffle = await Raffle.findById(req.params.id);
+    if (raffle) {
+      res.json(raffle);
+    } else {
+      res.status(404).json({ message: 'Rifa no encontrada' });
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Error al obtener la rifa' });
   }
 };
 
@@ -121,6 +121,60 @@ exports.finishRaffle = async (req, res) => {
     );
 
     res.json({ message: "Rifa finalizada. No se aceptan más reservas.", raffle });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Crear rifas iniciales de prueba
+exports.seedRaffles = async (req, res) => {
+  try {
+    await Raffle.deleteMany(); // Limpiamos para no duplicar
+
+    const sampleRaffles = [
+      {
+        title: "Súper Rifa iPhone 15 Pro",
+        description: "Participa por un iPhone 15 Pro de 128GB. Sorteo por lotería del Táchira.",
+        ticketPrice: 5,
+        totalTickets: 100,
+        image: "https://via.placeholder.com/400x250?text=iPhone+15",
+        drawDate: new Date("2026-03-30"),
+        status: "active"
+      },
+      {
+        title: "Moto Bera SBR 2024",
+        description: "Llévate una moto 0km. El precio incluye placa y casco.",
+        ticketPrice: 10,
+        totalTickets: 500,
+        image: "https://via.placeholder.com/400x250?text=Moto+Bera",
+        drawDate: new Date("2026-04-15"),
+        status: "active"
+      }
+    ];
+
+    await Raffle.insertMany(sampleRaffles);
+    res.json({ message: "¡Rifas de prueba creadas exitosamente!" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// backend/src/controllers/raffleController.js
+
+exports.getRaffleStats = async (req, res) => {
+  try {
+    const raffleId = req.params.id;
+    
+    // Buscamos todos los tickets de esta rifa
+    const tickets = await Ticket.find({ raffle: raffleId }).select('number status');
+    
+    // Creamos un array solo con los números ocupados para facilitar al frontend
+    const occupiedNumbers = tickets.map(t => t.number);
+    
+    res.json({
+      occupiedNumbers, // Ej: ["05", "22", "48"]
+      totalSold: tickets.length
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

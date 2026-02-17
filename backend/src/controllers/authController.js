@@ -30,6 +30,7 @@ exports.registerUser = async (req, res) => {
     // ESTA ES LA LÍNEA 31 FAMOSA
     console.log("--- DEBUG REGISTRO ---");
     console.error("Mensaje de error:", error.message);
+    console.error(error.stack);
     
     // IMPORTANTE: Aquí NO debe decir next(error)
     return res.status(500).json({ 

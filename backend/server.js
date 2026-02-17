@@ -1,4 +1,3 @@
-// backend/server.js
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -9,9 +8,9 @@ dotenv.config();
 
 const app = express();
 
-// 1. Middlewares de Seguridad y Procesamiento
-app.use(cors()); // Permite peticiones desde tu frontend (Vite)
-app.use(express.json()); // Vital para leer el req.body
+// 1. Middlewares
+app.use(cors());
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 2. Conexión a MongoDB
@@ -24,44 +23,39 @@ mongoose.connect(process.env.MONGO_URI)
 
 // 3. Importar Rutas
 const userRoutes = require('./src/routes/userRoutes');
-// const raffleRoutes = require('./src/routes/raffleRoutes'); // Descomenta cuando las tengas
+const raffleRoutes = require('./src/routes/raffleRoutes');
+const ticketRoutes = require('./src/routes/ticketRoutes');
+// const paymentRoutes = require('./src/routes/paymentRoutes'); // Descomenta cuando lo tengas
 
 // 4. Definir Rutas
 app.use('/api/users', userRoutes);
-// app.use('/api/raffles', raffleRoutes);
+app.use('/api/raffles', raffleRoutes);
+app.use('/api/tickets', ticketRoutes);
+// app.use('/api/payments', paymentRoutes);
 
-// Ruta de prueba inicial
+// Ruta de prueba
 app.get('/', (req, res) => {
-  res.send('API de Sistema de Rifas corriendo...');
+  res.send('API de Sistema de Rifas (TigritoApp) corriendo...');
 });
 
-// 5. Manejo de Errores (¡ESTA ES LA PARTE CRÍTICA!)
-
-// Middleware para rutas no encontradas (404)
+// 5. Manejo de Errores
 app.use((req, res, next) => {
   const error = new Error(`No se encontró la ruta - ${req.originalUrl}`);
   res.status(404);
-  next(error); // Aquí sí se usa next porque le pasamos el error al siguiente middleware
+  next(error);
 });
 
-// Manejador de errores global
 app.use((err, req, res, next) => {
-  // Verificamos si ya se envió una respuesta al cliente para evitar el error ERR_HTTP_HEADERS_SENT
-  if (res.headersSent) {
-    return next(err);
-  }
-
+  if (res.headersSent) return next(err);
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  
-  console.error(`❌ Error detectado en el servidor: ${err.message}`);
-
+  console.error(`❌ Error: ${err.message}`);
   res.status(statusCode).json({
     message: err.message,
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 });
 
-// 6. Encender el Servidor
+// 6. Puerto
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);

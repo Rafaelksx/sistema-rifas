@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
-import { Loader2, Info, CheckCircle2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const RaffleDetails = () => {
@@ -11,17 +11,24 @@ const RaffleDetails = () => {
   const { user } = useContext(AuthContext);
   
   const [raffle, setRaffle] = useState(null);
-  const [tickets, setTickets] = useState([]);
+  const [occupiedNumbers, setOccupiedNumbers] = useState([]); // Ahora guardamos solo los ocupados
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+
+  // Generamos el array de números basado en el total de la rifa
+  const allNumbers = raffle 
+    ? Array.from({ length: raffle.totalTickets }, (_, i) => i.toString().padStart(2, '0')) 
+    : [];
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const raffleRes = await api.get(`/raffles/${id}`); // Necesitarás este endpoint en el backend si no lo hicimos
-        const ticketsRes = await api.get(`/tickets/raffle/${id}`);
+        const [raffleRes, statsRes] = await Promise.all([
+          api.get(`/raffles/${id}`),
+          api.get(`/raffles/${id}/stats`) // El endpoint que hicimos para ver números ocupados
+        ]);
         setRaffle(raffleRes.data);
-        setTickets(ticketsRes.data);
+        setOccupiedNumbers(statsRes.data.occupiedNumbers);
       } catch (error) {
         toast.error("Error al cargar los detalles");
       } finally {
@@ -31,7 +38,7 @@ const RaffleDetails = () => {
     fetchDetails();
   }, [id]);
 
-  const handleReserve = async (ticketId, ticketNumber) => {
+  const handleReserve = async (number) => {
     if (!user) {
       toast.error("Debes iniciar sesión para reservar");
       return navigate('/login');
@@ -39,11 +46,16 @@ const RaffleDetails = () => {
 
     setProcessing(true);
     try {
-      await api.put(`/tickets/reserve/${ticketId}`);
-      toast.success(`¡Número ${ticketNumber} reservado!`);
-      // Recargar tickets para ver el cambio de estado
-      const { data } = await api.get(`/tickets/raffle/${id}`);
-      setTickets(data);
+      // Ahora usamos POST para crear el ticket en lugar de PUT
+      await api.post('/api/tickets/buy', {
+        raffleId: id,
+        number: number
+      });
+      
+      toast.success(`¡Número ${number} apartado!`);
+      
+      // Actualizamos los números ocupados localmente
+      setOccupiedNumbers([...occupiedNumbers, number]);
     } catch (error) {
       toast.error(error.response?.data?.message || "Error al reservar");
     } finally {
@@ -54,7 +66,7 @@ const RaffleDetails = () => {
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin" size={48} /></div>;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8 p-4">
       {/* HEADER DE LA RIFA */}
       <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
@@ -63,36 +75,34 @@ const RaffleDetails = () => {
         </div>
         <div className="text-center bg-blue-50 p-4 rounded-2xl border border-blue-100">
           <p className="text-sm text-blue-600 font-bold uppercase tracking-wider">Precio por boleto</p>
-          <p className="text-4xl font-black text-blue-700">${raffle?.price}</p>
+          <p className="text-4xl font-black text-blue-700">${raffle?.ticketPrice}</p>
         </div>
       </div>
 
-      {/* LEYENDA DE COLORES */}
+      {/* LEYENDA */}
       <div className="flex flex-wrap gap-4 justify-center bg-gray-100 p-4 rounded-2xl text-sm font-medium">
         <div className="flex items-center gap-2"><span className="w-4 h-4 bg-green-500 rounded-full"></span> Disponible</div>
-        <div className="flex items-center gap-2"><span className="w-4 h-4 bg-yellow-400 rounded-full"></span> Reservado</div>
-        <div className="flex items-center gap-2"><span className="w-4 h-4 bg-blue-500 rounded-full"></span> Verificando</div>
-        <div className="flex items-center gap-2"><span className="w-4 h-4 bg-gray-300 rounded-full"></span> Vendido</div>
+        <div className="flex items-center gap-2"><span className="w-4 h-4 bg-gray-300 rounded-full"></span> Ocupado</div>
       </div>
 
-      {/* GRID DE TICKETS */}
+      {/* GRID DE TICKETS DINÁMICO */}
       <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
-        {tickets.map((ticket) => (
-          <button
-            key={ticket._id}
-            disabled={ticket.status !== 'available' || processing}
-            onClick={() => handleReserve(ticket._id, ticket.number)}
-            className={`
-              aspect-square flex items-center justify-center rounded-xl font-bold text-sm transition-all transform active:scale-95
-              ${ticket.status === 'available' ? 'bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-100' : ''}
-              ${ticket.status === 'reserved' ? 'bg-yellow-400 text-white cursor-not-allowed opacity-80' : ''}
-              ${ticket.status === 'verifying' ? 'bg-blue-500 text-white cursor-not-allowed opacity-80' : ''}
-              ${ticket.status === 'paid' ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : ''}
-            `}
-          >
-            {ticket.number}
-          </button>
-        ))}
+        {allNumbers.map((num) => {
+          const isOccupied = occupiedNumbers.includes(num);
+          return (
+            <button
+              key={num}
+              disabled={isOccupied || processing}
+              onClick={() => handleReserve(num)}
+              className={`
+                aspect-square flex items-center justify-center rounded-xl font-bold text-sm transition-all transform active:scale-95
+                ${!isOccupied ? 'bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-100' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}
+              `}
+            >
+              {num}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { reserveTicket, getTicketsByRaffle, releaseTicketManual } = require('../controllers/ticketController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { buyTicket, getMyTickets } = require('../controllers/ticketController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.get('/raffle/:raffleId', getTicketsByRaffle);
-router.put('/reserve/:id', protect, reserveTicket); // Cualquier usuario logueado reserva
-router.patch('/:id/release', protect, admin, releaseTicketManual);
+// Solo usuarios logueados pueden comprar
+router.post('/buy', protect, buyTicket);
+router.get('/my-tickets', protect, getMyTickets);
 
 module.exports = router;

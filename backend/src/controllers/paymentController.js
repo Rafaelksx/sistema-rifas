@@ -1,36 +1,7 @@
 const Payment = require('../models/Payment');
 const Ticket = require('../models/Ticket');
 
-// @desc    Reportar un pago (Usuario)
-// @route   POST /api/payments/report
-exports.reportPayment = async (req, res) => {
-  try {
-    const { ticketId, reference, amount } = req.body;
 
-    // 1. Verificar que el ticket esté reservado por ESTE usuario
-    const ticket = await Ticket.findOne({ _id: ticketId, user: req.user._id, status: 'reserved' });
-    if (!ticket) {
-      return res.status(400).json({ message: "Ticket no encontrado o no está reservado por ti" });
-    }
-
-    // 2. Crear el registro de pago
-    const payment = await Payment.create({
-      ticket: ticketId,
-      user: req.user._id,
-      reference,
-      amount
-    });
-
-    // 3. Cambiar estado del ticket a 'verifying' (Azul en el frontend)
-    ticket.status = 'verifying';
-    await ticket.save();
-
-    res.status(201).json({ message: "Pago reportado. Esperando verificación administrativa.", payment });
-  } catch (error) {
-    if (error.code === 11000) return res.status(400).json({ message: "Esta referencia ya fue utilizada." });
-    res.status(500).json({ message: error.message });
-  }
-};
 
 // @desc    Aprobar o Rechazar pago (Admin)
 // @route   PUT /api/payments/verify/:id
