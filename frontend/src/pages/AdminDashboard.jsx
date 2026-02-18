@@ -1,56 +1,100 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Ticket, CreditCard, MessageSquare, PlusCircle } from 'lucide-react';
-
-// Importaremos estos mini-componentes a continuación
-import AdminSummary from '../components/admin/AdminSummary';
-import AdminRaffles from '../components/admin/AdminRaffles';
-import AdminPayments from '../components/admin/AdminPayments';
+import { useEffect, useState } from 'react';
+import api from '../api/axios';
+import { Plus, Edit, Trash2, CheckCircle, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
-  const location = useLocation();
+    const [raffles, setRaffles] = useState([]);
+    const [tickets, setTickets] = useState([]);
+    const [view, setView] = useState('raffles'); // 'raffles' o 'payments'
 
-  const menuItems = [
-    { path: '/admin', icon: <LayoutDashboard size={20} />, label: 'Resumen' },
-    { path: '/admin/raffles', icon: <Ticket size={20} />, label: 'Gestionar Rifas' },
-    { path: '/admin/payments', icon: <CreditCard size={20} />, label: 'Verificar Pagos' },
-    { path: '/admin/support', icon: <MessageSquare size={20} />, label: 'Reclamos' },
-  ];
+    useEffect(() => {
+        fetchData();
+    }, [view]);
 
-  return (
-    <div className="flex flex-col md:flex-row gap-8 min-h-[80vh]">
-      {/* SIDEBAR */}
-      <aside className="w-full md:w-64 space-y-2">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Menú Admin</p>
-          <nav className="space-y-1">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${
-                  location.pathname === item.path 
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' 
-                  : 'text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+    const fetchData = async () => {
+        try {
+            const endpoint = view === 'raffles' ? '/admin/raffles' : '/admin/tickets';
+            const { data } = await api.get(endpoint);
+            if (view === 'raffles') {
+                // Normalize possible shapes: array or { raffles: [...] }
+                if (Array.isArray(data)) setRaffles(data);
+                else if (Array.isArray(data.raffles)) setRaffles(data.raffles);
+                else setRaffles([]);
+            } else {
+                if (Array.isArray(data)) setTickets(data);
+                else if (Array.isArray(data.tickets)) setTickets(data.tickets);
+                else setTickets([]);
+            }
+        } catch (error) {
+            toast.error("Error al cargar datos");
+        }
+    };
+
+    const handleDeleteRaffle = async (id) => {
+        if (!window.confirm("¿Seguro que quieres eliminar esta rifa?")) return;
+        try {
+            await api.delete(`/admin/raffles/${id}`);
+            toast.success("Rifa eliminada");
+            fetchData();
+        } catch (error) { toast.error("Error al eliminar"); }
+    };
+
+    return (
+        <div className="max-w-7xl mx-auto p-6">
+            <div className="flex justify-between items-center mb-10">
+                <h1 className="text-3xl font-black">Panel de Control</h1>
+                <div className="flex gap-4">
+                    <button onClick={() => setView('raffles')} className={`px-4 py-2 rounded-xl font-bold ${view === 'raffles' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>Rifas</button>
+                    <button onClick={() => setView('payments')} className={`px-4 py-2 rounded-xl font-bold ${view === 'payments' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>Pagos</button>
+                </div>
+            </div>
+
+            {view === 'raffles' ? (
+                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="p-6 font-bold text-gray-400 uppercase text-xs">Rifa</th>
+                                <th className="p-6 font-bold text-gray-400 uppercase text-xs">Precio</th>
+                                <th className="p-6 font-bold text-gray-400 uppercase text-xs">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {raffles.map(r => (
+                                <tr key={r._id} className="border-b border-gray-50 last:border-0">
+                                    <td className="p-6 font-bold text-gray-900">{r.title}</td>
+                                    <td className="p-6 text-gray-600">${r.ticketPrice}</td>
+                                    <td className="p-6 flex gap-3">
+                                        <button className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><Edit size={18}/></button>
+                                        <button onClick={() => handleDeleteRaffle(r._id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"><Trash2 size={18}/></button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    {tickets.filter(t => t.status === 'verifying').map(t => (
+                        <div key={t._id} className="bg-white p-6 rounded-2xl border border-gray-100 flex justify-between items-center">
+                            <div>
+                                <p className="font-black text-blue-600 text-lg">Ticket #{t.number}</p>
+                                <p className="text-sm text-gray-500">Usuario: {t.user?.name} | Rifa: {t.raffle?.title}</p>
+                                <p className="text-xs font-mono bg-gray-100 inline-block px-2 py-1 mt-2 rounded">Ref: {t.reference}</p>
+                            </div>
+                            <button 
+                                onClick={() => {/* lógica para confirmar */}}
+                                className="bg-green-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-green-700 flex items-center gap-2"
+                            >
+                                <CheckCircle size={18}/> Confirmar Pago
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
-      </aside>
-
-      {/* CONTENIDO DINÁMICO */}
-      <section className="flex-1 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <Routes>
-          <Route path="/" element={<AdminSummary />} />
-          <Route path="/raffles" element={<AdminRaffles />} />
-          <Route path="/payments" element={<AdminPayments />} />
-        </Routes>
-      </section>
-    </div>
-  );
+    );
 };
 
 export default AdminDashboard;
