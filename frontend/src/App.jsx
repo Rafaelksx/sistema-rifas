@@ -10,22 +10,27 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RaffleDetails from './pages/RaffleDetails';
-import MyTickets from './pages/MyTickets'; // La crearemos a continuación
-import AdminDashboard from './pages/AdminDashboard';
+import MyTickets from './pages/MyTickets';
+import AdminPanel from './pages/AdminPanel'; // Asegúrate de que la ruta sea correcta
 
 // Componente para proteger rutas (Solo logueados)
 const PrivateRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return null; // Evita redirecciones mientras carga
   return user ? children : <Navigate id="login-redirect" to="/login" />;
 };
 
 // Componente para proteger rutas de Admin
 const AdminRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return null; // Evita redirecciones mientras carga
   return user && user.role === 'admin' ? children : <Navigate id="admin-redirect" to="/" />;
 };
 
 function App() {
+  // Nota: No necesitamos extraer 'user' aquí porque lo usaremos 
+  // a través de los componentes AdminRoute y PrivateRoute
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -65,10 +70,10 @@ function App() {
 
             {/* Rutas de Administrador (Protegidas) */}
             <Route 
-              path="/admin/*" 
+              path="/admin" 
               element={
                 <AdminRoute>
-                  <AdminDashboard />
+                  <AdminPanel />
                 </AdminRoute>
               } 
             />

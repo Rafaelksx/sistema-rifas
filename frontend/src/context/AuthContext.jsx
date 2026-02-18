@@ -1,6 +1,4 @@
-// src/context/AuthContext.jsx
-import { createContext, useState } from 'react';
-import api from '../api/axios';
+import { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
 
@@ -9,28 +7,21 @@ export const AuthProvider = ({ children }) => {
     JSON.parse(localStorage.getItem('userInfo')) || null
   );
 
-  const login = async (email, password) => {
-    const { data } = await api.post('/users/login', { email, password });
-    // data debe contener { _id, name, email, role, token }
-    setUser(data);
-    localStorage.setItem('userInfo', JSON.stringify(data));
-  };
-
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/users/register', { name, email, password });
-    // data debe contener { _id, name, email, role, token }
-    setUser(data);
-    localStorage.setItem('userInfo', JSON.stringify(data));
-  };
-
   const logout = () => {
     localStorage.removeItem('userInfo');
     setUser(null);
   };
 
+  const register = async (name, email, password) => {
+    const { data } = await api.post('/users/register', { name, email, password });
+    setUser(data.user);
+    setToken(data.token);
+    localStorage.setItem('token', data.token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+};
+
   return (
-    // IMPORTANTE: Agregamos login y register al value para que los componentes puedan usarlos
-    <AuthContext.Provider value={{ user, setUser, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
