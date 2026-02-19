@@ -1,21 +1,30 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { UserPlus, Mail, Lock, User, Loader2 } from 'lucide-react';
+// Importamos el icono de Phone
+import { UserPlus, Mail, Lock, User, Loader2, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  // 1. Añadimos 'phone' al estado inicial
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    password: '' 
+  });
   const [loading, setLoading] = useState(false);
   
-  const { register } = useContext(AuthContext); // Asumiendo que añadiste register al context
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(formData.name, formData.email, formData.password);
+      // 2. Pasamos el teléfono a la función de registro del context
+      // Asegúrate de que en AuthContext la función acepte: (name, email, password, phone)
+      await register(formData.name, formData.email, formData.password, formData.phone);
       toast.success('Cuenta creada exitosamente');
       navigate('/');
     } catch (error) {
@@ -37,6 +46,7 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* CAMPO: NOMBRE */}
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 ml-1">Nombre Completo</label>
             <div className="relative">
@@ -44,7 +54,7 @@ const Register = () => {
               <input
                 type="text"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
                 placeholder="Juan Pérez"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -52,6 +62,7 @@ const Register = () => {
             </div>
           </div>
 
+          {/* CAMPO: CORREO */}
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 ml-1">Correo Electrónico</label>
             <div className="relative">
@@ -59,7 +70,7 @@ const Register = () => {
               <input
                 type="email"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
                 placeholder="tu@correo.com"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -67,6 +78,23 @@ const Register = () => {
             </div>
           </div>
 
+          {/* NUEVO CAMPO: TELÉFONO */}
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-700 ml-1">Teléfono</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="tel"
+                required
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                placeholder="Ej: 04141234567"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
+            </div>
+          </div>
+
+          {/* CAMPO: CONTRASEÑA */}
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 ml-1">Contraseña</label>
             <div className="relative">
@@ -74,7 +102,7 @@ const Register = () => {
               <input
                 type="password"
                 required
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
                 placeholder="Mínimo 6 caracteres"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
