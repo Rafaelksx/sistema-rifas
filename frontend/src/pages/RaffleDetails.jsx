@@ -126,24 +126,29 @@ const RaffleDetails = () => {
       {/* GRID DE TICKETS - Aquí es donde fallaba antes */}
       <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10 lg:grid-cols-12 gap-3">
         {allNumbers.map((num) => {
-          // Usamos encadenamiento opcional ?. por seguridad máxima
-          const isOccupied = occupiedNumbers?.includes(num);
-          const isMine = mySelectedNumbers?.includes(num);
+          // Buscamos si el ticket existe en la lista que vino del backend
+          const ticketData = occupiedNumbers.find(t => t.number === num);
+          const status = ticketData?.status;
+          const isMine = ticketData?.user === user?._id || mySelectedNumbers.includes(num);
+
+          let btnClass = "bg-green-500 hover:bg-green-600 text-white shadow-lg"; // Disponible
+
+          if (status === 'paid') {
+            btnClass = "bg-gray-800 text-gray-400 cursor-not-allowed opacity-50"; // Vendido (Gris oscuro)
+          } else if (status === 'verifying') {
+            btnClass = "bg-yellow-500 text-white cursor-not-allowed animate-pulse"; // Pago reportado
+          } else if (status === 'reserved') {
+            btnClass = isMine 
+              ? "bg-blue-600 text-white ring-4 ring-blue-100 scale-105" // Tu reserva
+              : "bg-orange-400 text-white opacity-70 cursor-not-allowed"; // Reserva de otro (Naranja)
+          }
 
           return (
             <button
               key={num}
-              disabled={(isOccupied && !isMine) || processing}
+              disabled={(status && !isMine) || processing}
               onClick={() => handleToggleTicket(num)}
-              className={`
-                aspect-square flex items-center justify-center rounded-xl font-bold text-sm transition-all transform hover:scale-105 active:scale-90
-                ${isMine 
-                  ? 'bg-blue-600 text-white ring-4 ring-blue-100 shadow-xl z-10' 
-                  : !isOccupied 
-                    ? 'bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-100' 
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
-                }
-              `}
+              className={`aspect-square flex items-center justify-center rounded-xl font-bold text-sm transition-all ${btnClass}`}
             >
               {num}
             </button>
