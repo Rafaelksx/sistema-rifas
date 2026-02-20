@@ -1,105 +1,107 @@
-// src/pages/Home.jsx
-import { useEffect, useState } from 'react';
-import api from '../api/axios';
-import RaffleCard from '../components/RaffleCard';
-import { Loader2, ShieldCheck, Zap, Smartphone, ArrowDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Trophy, ShieldCheck, Zap, ArrowRight, Users, Star } from 'lucide-react';
 
 const Home = () => {
-  const [raffles, setRaffles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRaffles = async () => {
-      try {
-        const { data } = await api.get('/raffles?status=active');
-        setRaffles(data.raffles);
-      } catch (error) {
-        console.error("Error cargando rifas", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRaffles();
-  }, []);
-
   return (
-    <div className="space-y-24 pb-20">
-      {/* 1. SECCIÓN HERO */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="text-center space-y-8 relative z-10">
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 leading-tight">
-            Tu oportunidad de ganar <br />
-            <span className="text-blue-600">está a un clic.</span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-xl text-gray-600">
-            Participa en las mejores rifas de Venezuela de forma segura, rápida y transparente. 
-            ¡Elige tu número de la suerte ahora!
-          </p>
-          <div className="flex justify-center gap-4">
-            <a href="#rifas" className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition shadow-xl shadow-blue-200">
-              Ver Rifas Activas
-            </a>
+    <div className="flex flex-col">
+      {/* HERO SECTION - El impacto visual inicial */}
+      <section className="relative bg-white pt-20 pb-32 overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col items-center text-center">
+            <span className="bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full text-sm font-black mb-6 animate-bounce">
+              🚀 ¡EL PRÓXIMO GANADOR PUEDES SER TÚ!
+            </span>
+            <h1 className="text-6xl md:text-8xl font-black text-slate-900 mb-8 tracking-tighter leading-none">
+              Gana premios <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-500">
+                extraordinarios.
+              </span>
+            </h1>
+            <p className="text-xl text-slate-500 max-w-2xl mb-12 font-medium leading-relaxed">
+              La plataforma de rifas más transparente y segura de Venezuela. 
+              Participa desde $1 y cambia tu suerte hoy mismo.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link 
+                to="/explorar" 
+                className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-slate-800 transition-all flex items-center gap-2 shadow-2xl shadow-slate-200"
+              >
+                Ver Rifas Disponibles <ArrowRight size={22} />
+              </Link>
+              <Link 
+                to="/register" 
+                className="bg-white border-2 border-slate-100 text-slate-900 px-10 py-5 rounded-2xl font-black text-lg hover:bg-slate-50 transition-all"
+              >
+                Crear mi Cuenta
+              </Link>
+            </div>
           </div>
         </div>
+        
         {/* Decoración de fondo */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-0 opacity-10">
-          <div className="absolute top-10 left-10 w-64 h-64 bg-blue-400 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-400 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-purple-50 rounded-full blur-3xl opacity-50" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50" />
+      </section>
+
+      {/* FEATURES - Por qué confiar en nosotros */}
+      <section className="py-24 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="bg-white p-10 rounded-[40px] shadow-sm hover:shadow-xl transition-shadow border border-slate-100">
+              <div className="w-16 h-16 bg-purple-600 text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-purple-100">
+                <ShieldCheck size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-4">100% Seguro</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">
+                Resultados basados en loterías oficiales para garantizar total transparencia en cada sorteo.
+              </p>
+            </div>
+
+            <div className="bg-white p-10 rounded-[40px] shadow-sm hover:shadow-xl transition-shadow border border-slate-100">
+              <div className="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-indigo-100">
+                <Zap size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-4">Pagos Rápidos</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">
+                Procesamos tus boletos al instante vía Pago Móvil. Sin esperas, sin complicaciones.
+              </p>
+            </div>
+
+            <div className="bg-white p-10 rounded-[40px] shadow-sm hover:shadow-xl transition-shadow border border-slate-100">
+              <div className="w-16 h-16 bg-pink-600 text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-pink-100">
+                <Trophy size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-4">Grandes Premios</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">
+                Desde tecnología hasta efectivo. Premios seleccionados para mejorar tu calidad de vida.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 2. CÓMO FUNCIONA */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-12 px-4">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto">
-            <Zap size={32} />
-          </div>
-          <h3 className="text-xl font-bold">1. Elige tu número</h3>
-          <p className="text-gray-500">Selecciona los boletos que desees de nuestras rifas activas.</p>
-        </div>
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto">
-            <Smartphone size={32} />
-          </div>
-          <h3 className="text-xl font-bold">2. Paga y Reporta</h3>
-          <p className="text-gray-500">Realiza tu Pago Móvil y sube el comprobante al sistema.</p>
-        </div>
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto">
-            <ShieldCheck size={32} />
-          </div>
-          <h3 className="text-xl font-bold">3. ¡Ya estás participando!</h3>
-          <p className="text-gray-500">Una vez verificado, tu número quedará asegurado para el sorteo.</p>
-        </div>
-      </section>
-
-      {/* 3. SECCIÓN DE RIFAS */}
-      <section id="rifas" className="scroll-mt-20">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-          <div>
-            <h2 className="text-3xl font-black text-gray-900">Rifas Disponibles</h2>
-            <p className="text-gray-500">No te quedes fuera, el tiempo corre.</p>
-          </div>
-          <div className="text-blue-600 font-bold flex items-center gap-2 animate-bounce">
-            <ArrowDown size={20} /> Desliza para ver más
+      {/* STATS SECTION */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4 border-y border-slate-100 py-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <p className="text-4xl font-black text-slate-900">+500</p>
+              <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-2">Usuarios</p>
+            </div>
+            <div>
+              <p className="text-4xl font-black text-slate-900">+100</p>
+              <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-2">Sorteos</p>
+            </div>
+            <div>
+              <p className="text-4xl font-black text-slate-900">$2k+</p>
+              <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-2">Entregados</p>
+            </div>
+            <div>
+              <p className="text-4xl font-black text-slate-900">100%</p>
+              <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-2">Confianza</p>
+            </div>
           </div>
         </div>
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-blue-600" size={48} />
-          </div>
-        ) : raffles.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
-            <p className="text-gray-400 text-lg">Próximamente nuevas rifas...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {raffles.map((raffle) => (
-              <RaffleCard key={raffle._id} raffle={raffle} />
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );

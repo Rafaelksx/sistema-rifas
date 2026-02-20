@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import RaffleDetails from './pages/RaffleDetails';
 import MyTickets from './pages/MyTickets';
 import AdminPanel from './pages/AdminPanel'; // Asegúrate de que la ruta sea correcta
+import RafflesExplore from './pages/RafflesExplore';
 
 // Componente para proteger rutas (Solo logueados)
 const PrivateRoute = ({ children }) => {
@@ -57,6 +58,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/raffle/:id" element={<RaffleDetails />} />
+            <Route path="/explorar" element={<RafflesExplore />} />
 
             {/* Rutas de Usuario (Protegidas) */}
             <Route 
